@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  medusa-backend:
+    image: medusa-backend:latest
+    container_name: medusa-backend
+    restart: always
+    ports:
+      - "9000:9000"
+    env_file:
+      - /home/ubuntu/medusa-backend/.env
+    volumes:
+      - /home/ubuntu/medusa-backend:/usr/src/app
