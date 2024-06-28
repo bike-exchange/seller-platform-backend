@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/medusa-backend
+            cd /home/ubuntu/seller-platform-backend
             git pull origin main
             yarn install
             yarn run build
