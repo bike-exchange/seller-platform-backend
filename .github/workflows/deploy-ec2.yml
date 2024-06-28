@@ -26,4 +26,4 @@ jobs:
             yarn run build
             yarn run build:vendor
             yarn run build:admin
-            sudo systemctl restart medusa-backend.service
+            sudo systemctl restart seller-platform-backend.service
