@@ -5,32 +5,7 @@
       "usd"
     ]
   },
-  "users": [
-		{
-			"email": "abdul@bikeexchange.de",
-			"password": "test@123",
-			"is_admin": true,
-			"status": "active"
-		},
-    {
-			"email": "ayoub@bikeexchange.de",
-			"password": "test@123",
-			"is_admin": true,
-			"status": "active"
-		},
-		{
-			"email": "markus@bikeexchange.de",
-			"password": "test@123",
-			"is_admin": true,
-			"status": "active"
-		},
-		{
-			"email": "henning@bikeexchange.de",
-			"password": "test@123",
-			"is_admin": true,
-			"status": "active"
-		}
-	],
+  "users": [],
   "regions": [
     {
       "id": "test-region-eu",
