@@ -8,6 +8,7 @@ import { ProductSelector as MedusaProductSelector } from "@medusajs/medusa/dist/
 
 import type { User } from "../models/user";
 import type { Product } from "../models/product";
+import { checkIsAdminUser } from "../utils/checkIsAdminUser";
 
 // We override the type definition so it will not throw TS errors in the `create` method
 type CreateProductInput = {
@@ -32,17 +33,40 @@ class ProductService extends MedusaProductService {
       // avoid errors when backend first runs
     }
   }
+
+  /**
+   * Assigns store_id to selector if not provided except for admin user who can see all users
+   * @param selector
+   */
+  private prepareListConfig_(
+    selector?: ProductSelector,
+    config?: FindProductConfig
+  ) {
+    selector = selector || {};
+
+    const isAdminUser = checkIsAdminUser(this.loggedInUser_);
+    if (!isAdminUser && this.loggedInUser_?.store_id && !selector.store_id) {
+      selector.store_id = this.loggedInUser_.store_id;
+      config?.select?.push("store_id");
+      config?.relations?.push("store");
+    }
+  }
+
+  async list(
+    selector: ProductSelector,
+    config?: FindProductConfig
+  ): Promise<Product[]> {
+    this.prepareListConfig_(selector, config);
+
+    const products = await super.list(selector, config);
+    return products;
+  }
+
   async listAndCount(
     selector: ProductSelector,
     config?: FindProductConfig
   ): Promise<[Product[], number]> {
-    if (!selector.store_id && this.loggedInUser_?.store_id) {
-      selector.store_id = this.loggedInUser_.store_id;
-    }
-
-    config.select?.push("store_id");
-
-    config.relations?.push("store");
+    this.prepareListConfig_(selector, config);
 
     const products = await super.listAndCount(selector, config);
     return products;

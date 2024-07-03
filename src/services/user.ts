@@ -1,15 +1,20 @@
 import { Lifetime } from "awilix";
-import { UserService as MedusaUserService } from "@medusajs/medusa";
+import { FindConfig, UserService as MedusaUserService } from "@medusajs/medusa";
 import { User } from "../models/user";
-import { CreateUserInput as MedusaCreateUserInput } from "@medusajs/medusa/dist/types/user";
+import {
+  FilterableUserProps,
+  CreateUserInput as MedusaCreateUserInput,
+} from "@medusajs/medusa/dist/types/user";
 import type StoreRepository from "@medusajs/medusa/dist/repositories/store";
+import { Selector } from "@medusajs/types";
+import { checkIsAdminUser } from "../utils/checkIsAdminUser";
 
 type CreateUserInput = {
   store_id?: string;
 } & MedusaCreateUserInput;
 
 class UserService extends MedusaUserService {
-  static LIFE_TIME = Lifetime.SCOPED;
+  static LIFE_TIME = Lifetime.TRANSIENT;
   protected readonly loggedInUser_: User | null;
   protected readonly storeRepository_: typeof StoreRepository;
 
@@ -35,6 +40,37 @@ class UserService extends MedusaUserService {
     }
 
     return await super.create(user, password);
+  }
+
+  /**
+   * Assigns store_id to selector if not provided except for admin user who can see all users
+   * @param selector
+   */
+  private prepareListConfig_(selector?: Selector<User>) {
+    selector = selector || {};
+
+    const isAdminUser = checkIsAdminUser(this.loggedInUser_);
+    if (!isAdminUser && this.loggedInUser_?.store_id && !selector.store_id) {
+      selector.store_id = this.loggedInUser_.store_id;
+    }
+  }
+
+  async list(
+    selector?: Selector<User> & { q?: string },
+    config?: FindConfig<FilterableUserProps>
+  ): Promise<User[]> {
+    this.prepareListConfig_(selector);
+
+    return await super.list(selector, config);
+  }
+
+  async listAndCount(
+    selector?: Selector<User> & { q?: string },
+    config?: FindConfig<FilterableUserProps>
+  ): Promise<[User[], number]> {
+    this.prepareListConfig_(selector);
+
+    return await super.listAndCount(selector, config);
   }
 }
 
