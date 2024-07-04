@@ -41,7 +41,10 @@ const InviteUsersModal = ({
 
   const onSubmit = form.handleSubmit(async (data) => {
     mutate(
-      { role: data.role as UserRoles, user: data.email },
+      {
+        role: data.role as UserRoles,
+        user: data.email,
+      },
       {
         onSuccess: () => {
           notify.success("Success", `User ${data.email} was invited`);
@@ -60,7 +63,7 @@ const InviteUsersModal = ({
       <FocusModal.Trigger>
         <Button variant="secondary">Invite users</Button>
       </FocusModal.Trigger>
-      <FocusModal.Content>
+      <FocusModal.Content className="min-w-modal rounded-rounded bg-grey-0 overflow-x-hidden max-h-96 max-w-[60%] m-auto">
         <form onSubmit={onSubmit}>
           <FocusModal.Header>
             <Button isLoading={isLoading}>Invite</Button>
@@ -70,7 +73,9 @@ const InviteUsersModal = ({
               <div className="flex flex-col gap-y-1">
                 <Heading>Invite users</Heading>
                 <Text className="text-ui-fg-subtle">
-                  Invite users to your team
+                  {isUserAdmin
+                    ? "invite user to the platform"
+                    : "invite users to your store"}
                 </Text>
               </div>
               <div className="flex flex-col gap-y-4">

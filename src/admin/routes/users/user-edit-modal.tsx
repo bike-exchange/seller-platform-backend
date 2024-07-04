@@ -12,19 +12,11 @@ import React from "react";
 import { User } from "@medusajs/medusa";
 import { Notify } from "./types";
 import { useAdminUpdateUser } from "medusa-react";
+import { getPossibleUserRoles } from "./utils";
 
 enum UserRoles {
-  /**
-   * The user is an admin.
-   */
   ADMIN = "admin",
-  /**
-   * The user is a team member.
-   */
   MEMBER = "member",
-  /**
-   * The user is a developer.
-   */
   DEVELOPER = "developer",
 }
 
@@ -37,11 +29,13 @@ type UserDetailsFormValues = {
 const UserEditModal = ({
   user,
   isOpen,
+  isUserAdmin,
   onClose,
   notify,
 }: {
   user: User | null;
   isOpen: boolean;
+  isUserAdmin: boolean;
   onClose: () => void;
   notify: Notify;
 }) => {
@@ -77,9 +71,11 @@ const UserEditModal = ({
     });
   });
 
+  const roles = getPossibleUserRoles(isUserAdmin);
+
   return (
     <FocusModal open={isOpen} onOpenChange={onClose}>
-      <FocusModal.Content>
+      <FocusModal.Content className="min-w-modal rounded-rounded bg-grey-0 overflow-x-hidden max-h-[40%] max-w-[60%] m-auto">
         <form onSubmit={onSubmit}>
           <FocusModal.Header>
             <Button isLoading={isLoading}>Save</Button>
@@ -115,7 +111,7 @@ const UserEditModal = ({
                 </div>
                 <div className="flex flex-col gap-y-2">
                   <Label htmlFor="last_name" className="text-ui-fg-subtle">
-                    Status
+                    Role
                   </Label>
                   <Controller
                     name="role"
@@ -127,7 +123,7 @@ const UserEditModal = ({
                           <Select.Value placeholder="Select status" />
                         </Select.Trigger>
                         <Select.Content>
-                          {statuses.map((item) => (
+                          {roles.map((item) => (
                             <Select.Item key={item.value} value={item.value}>
                               {item.label}
                             </Select.Item>
@@ -145,21 +141,6 @@ const UserEditModal = ({
     </FocusModal>
   );
 };
-
-const statuses = [
-  {
-    label: "Active",
-    value: "active",
-  },
-  {
-    label: "Rejected",
-    value: "rejected",
-  },
-  {
-    label: "Pending",
-    value: "pending",
-  },
-];
 
 const getDefaultValues = (user: User | null): UserDetailsFormValues => {
   return {

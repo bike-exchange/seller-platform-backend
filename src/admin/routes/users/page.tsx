@@ -76,6 +76,7 @@ const UsersPage = ({ notify }: RouteProps) => {
         onClose={closeEditModal}
         user={editUser}
         notify={notify}
+        isUserAdmin={isCurrentUserAdmin}
       />
       <Container>
         <div className="flex justify-between align-top">
@@ -93,11 +94,19 @@ const UsersPage = ({ notify }: RouteProps) => {
         <Table className="mt-4">
           <Table.Header>
             <Table.Row className="[&_th:last-of-type]:w-[1%]">
-              <Table.HeaderCell>Email</Table.HeaderCell>
-              <Table.HeaderCell>First and last name</Table.HeaderCell>
-              <Table.HeaderCell>Marketplace role</Table.HeaderCell>
+              <Table.HeaderCell>
+                <strong className="text-grey-90">Email</strong>
+              </Table.HeaderCell>
+              <Table.HeaderCell>
+                <strong className="text-grey-90">First and last name</strong>
+              </Table.HeaderCell>
+              <Table.HeaderCell>
+                <strong className="text-grey-90">Marketplace role</strong>
+              </Table.HeaderCell>
               {isCurrentUserAdmin && (
-                <Table.HeaderCell>user store</Table.HeaderCell>
+                <Table.HeaderCell>
+                  <strong className="text-grey-90">user store</strong>
+                </Table.HeaderCell>
               )}
               <Table.HeaderCell></Table.HeaderCell>
             </Table.Row>
@@ -115,13 +124,13 @@ const UsersPage = ({ notify }: RouteProps) => {
                       .filter(Boolean)
                       .join(" ")}
                   </Table.Cell>
-                  <Table.Cell>
+                  <Table.Cell
+                    className={user.role === "admin" && "text-rose-50"}
+                  >
                     {user.role === "admin" ? "Admin" : "Vendor"}
                   </Table.Cell>
                   {isCurrentUserAdmin && (
-                    <Table.Cell>
-                      {(user as any) /* TODO: fix this*/.store?.name}
-                    </Table.Cell>
+                    <Table.Cell>{user.store?.name}</Table.Cell>
                   )}
                   {shouldCurrentUserEditTargetUser(
                     currentUser.role,

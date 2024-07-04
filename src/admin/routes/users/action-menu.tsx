@@ -23,8 +23,8 @@ export function UserActions({
     },
   });
 
-  const onDelete = () => {
-    const confirmed = promt({
+  const onDelete = async () => {
+    const confirmed = await promt({
       title: "Are you sure?",
       description: "Are you sure you want to delete this user?",
       confirmText: "Delete",
