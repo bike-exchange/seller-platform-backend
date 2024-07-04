@@ -2,7 +2,7 @@ import { Lifetime } from "awilix";
 import { FindConfig, UserService as MedusaUserService } from "@medusajs/medusa";
 import { User } from "../models/user";
 import {
-  FilterableUserProps,
+  FilterableUserProps as MedusaFilterableUserProps,
   CreateUserInput as MedusaCreateUserInput,
 } from "@medusajs/medusa/dist/types/user";
 import type StoreRepository from "@medusajs/medusa/dist/repositories/store";
@@ -12,6 +12,8 @@ import { checkIsAdminUser } from "../utils/checkIsAdminUser";
 type CreateUserInput = {
   store_id?: string;
 } & MedusaCreateUserInput;
+
+type FilterableUserProps = { store_id?: string } & MedusaFilterableUserProps;
 
 class UserService extends MedusaUserService {
   static LIFE_TIME = Lifetime.TRANSIENT;
@@ -46,20 +48,25 @@ class UserService extends MedusaUserService {
    * Assigns store_id to selector if not provided except for admin user who can see all users
    * @param selector
    */
-  private prepareListConfig_(selector?: Selector<User>) {
+  private prepareListConfig_(
+    selector?: Selector<User>,
+    config?: FindConfig<FilterableUserProps>
+  ) {
     selector = selector || {};
 
     const isAdminUser = checkIsAdminUser(this.loggedInUser_);
     if (!isAdminUser && this.loggedInUser_?.store_id && !selector.store_id) {
       selector.store_id = this.loggedInUser_.store_id;
     }
+    config?.select?.push("store_id");
+    config?.relations?.push("store");
   }
 
   async list(
     selector?: Selector<User> & { q?: string },
     config?: FindConfig<FilterableUserProps>
   ): Promise<User[]> {
-    this.prepareListConfig_(selector);
+    this.prepareListConfig_(selector, config);
 
     return await super.list(selector, config);
   }
@@ -68,7 +75,7 @@ class UserService extends MedusaUserService {
     selector?: Selector<User> & { q?: string },
     config?: FindConfig<FilterableUserProps>
   ): Promise<[User[], number]> {
-    this.prepareListConfig_(selector);
+    this.prepareListConfig_(selector, config);
 
     return await super.listAndCount(selector, config);
   }
