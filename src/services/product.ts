@@ -47,9 +47,9 @@ class ProductService extends MedusaProductService {
     const isAdminUser = checkIsAdminUser(this.loggedInUser_);
     if (!isAdminUser && this.loggedInUser_?.store_id && !selector.store_id) {
       selector.store_id = this.loggedInUser_.store_id;
-      config?.select?.push("store_id");
-      config?.relations?.push("store");
     }
+    config?.select?.push("store_id");
+    config?.relations?.push("store");
   }
 
   async list(

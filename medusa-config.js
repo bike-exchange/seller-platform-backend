@@ -27,8 +27,8 @@ const ADMIN_CORS =
   "http://localhost:7000,http://localhost:7001,https://medusa-admin-delta.vercel.app";
 
 const AUTH_CORS =
-process.env.AUTH_CORS ||
-"http://localhost:7000,http://localhost:7001,https://medusa-admin-delta.vercel.app";
+  process.env.AUTH_CORS ||
+  "http://localhost:7000,http://localhost:7001,https://medusa-admin-delta.vercel.app";
 
 // CORS to avoid issues when consuming Medusa from a client
 const STORE_CORS = process.env.STORE_CORS || "http://localhost:8000";
@@ -82,6 +82,12 @@ const modules = {
       redisUrl: REDIS_URL
     }
   },*/
+  inventoryService: {
+    resolve: "@medusajs/inventory",
+  },
+  stockLocationService: {
+    resolve: "@medusajs/stock-location",
+  },
 };
 
 /** @type {import('@medusajs/medusa').ConfigModule["projectConfig"]} */
