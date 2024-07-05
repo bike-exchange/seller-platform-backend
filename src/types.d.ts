@@ -10,7 +10,7 @@ declare module "@medusajs/medusa/dist/models/product" {
 
 declare module "@medusajs/medusa/dist/models/user" {
   interface User {
-    store_id: string | null;
-    store: Store | null;
+    store_id?: string | null;
+    store?: Store | null;
   }
 }
