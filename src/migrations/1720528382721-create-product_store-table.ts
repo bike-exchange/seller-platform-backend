@@ -9,13 +9,13 @@ export class CreateProductStoreTable1720528382721
         name: "product_store",
         columns: [
           {
-            name: "productId",
+            name: "product_id",
             type: "char",
             unsigned: true,
             isNullable: false,
           },
           {
-            name: "storeId",
+            name: "store_id",
             type: "char",
             unsigned: true,
             isNullable: false,
@@ -24,13 +24,13 @@ export class CreateProductStoreTable1720528382721
         foreignKeys: [
           {
             name: "FK_64a92c1ada6c4c12a45b0df01537f1c7",
-            columnNames: ["productId"],
+            columnNames: ["product_id"],
             referencedTableName: "product",
             referencedColumnNames: ["id"],
           },
           {
             name: "FK_42e226f0e7b244eea40e19e68b8b2631",
-            columnNames: ["storeId"],
+            columnNames: ["store_id"],
             referencedTableName: "store",
             referencedColumnNames: ["id"],
           },
