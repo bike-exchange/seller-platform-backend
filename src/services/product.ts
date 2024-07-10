@@ -2,30 +2,36 @@ import type {
   FindProductConfig,
   CreateProductInput as MedusaCreateProductInput,
 } from "@medusajs/medusa/dist/types/product";
-import { ProductService as MedusaProductService } from "@medusajs/medusa";
+import {
+  ProductService as MedusaProductService,
+  Product,
+} from "@medusajs/medusa";
+import { MedusaError } from "@medusajs/utils";
 import { Lifetime } from "awilix";
 import { ProductSelector as MedusaProductSelector } from "@medusajs/medusa/dist/types/product";
 
 import type { User } from "../models/user";
-import type { Product } from "../models/product";
-import { checkIsAdminUser } from "../utils/checkIsAdminUser";
+import StoreService from "./store";
+import { Store } from "../models/store";
 
 // We override the type definition so it will not throw TS errors in the `create` method
 type CreateProductInput = {
-  store_id?: string;
+  stores?: Store[];
 } & MedusaCreateProductInput;
 
 type ProductSelector = {
-  store_id?: string;
+  stores?: Store[];
 } & MedusaProductSelector;
 
 class ProductService extends MedusaProductService {
   static LIFE_TIME = Lifetime.TRANSIENT;
   protected readonly loggedInUser_: User | null;
+  protected readonly storeService_: StoreService;
 
   constructor(container) {
     // @ts-ignore
     super(...arguments);
+    this.storeService_ = container.storeService;
 
     try {
       this.loggedInUser_ = container.loggedInUser;
@@ -34,63 +40,99 @@ class ProductService extends MedusaProductService {
     }
   }
 
-  // /**
-  //  * Assigns store_id to selector if not provided except for admin user who can see all users
-  //  * @param selector
-  //  */
-  // private prepareListConfig_(
-  //   selector?: ProductSelector,
-  //   config?: FindProductConfig
-  // ) {
-  //   selector = selector || {};
+  async create(productObject: CreateProductInput): Promise<Product> {
+    if (this.loggedInUser_?.store_id) {
+      const currentStore = await this.storeService_.retrieve();
+      // NOTE: when product is created for first time, we set the stores object to contain current user store
+      if (currentStore) {
+        productObject.stores = [currentStore];
+        return await super.create(productObject);
+      } else {
+        throw new MedusaError(
+          MedusaError.Types.NOT_FOUND,
+          "could not get store data of current user"
+        );
+      }
+    } else {
+      throw new MedusaError(
+        MedusaError.Types.NOT_ALLOWED,
+        "can not create Product because of missing user store"
+      );
+    }
+  }
 
-  //   const isAdminUser = checkIsAdminUser(this.loggedInUser_);
-  //   if (!isAdminUser && this.loggedInUser_?.store_id && !selector.store_id) {
-  //     selector.store_id = this.loggedInUser_.store_id;
-  //   }
-  //   config?.select?.push("store_id");
-  //   config?.relations?.push("store");
-  // }
+  async list(
+    selector: ProductSelector,
+    config?: FindProductConfig
+  ): Promise<Product[]> {
+    if (this.loggedInUser_?.store_id) {
+      try {
+        const currentStoreId = this.loggedInUser_?.store_id;
+        const productRepo = this.activeManager_.withRepository(
+          this.productRepository_
+        );
 
-  // async list(
-  //   selector: ProductSelector,
-  //   config?: FindProductConfig
-  // ): Promise<Product[]> {
-  //   this.prepareListConfig_(selector, config);
+        const qb = productRepo
+          .createQueryBuilder("product")
+          .innerJoin("product.stores", "store", "store.id = :storeId")
+          .setParameter("storeId", currentStoreId) // only get products which are related to current user store
+          .leftJoinAndSelect("product.variants", "variant");
 
-  //   const products = await super.list(selector, config);
-  //   return products;
-  // }
+        const products = await qb.getMany();
+        // TODO: check if this is actually needed
+        products.forEach((product) => {
+          const productVariants = product.variants;
+          product.variants = productVariants || [];
+        });
 
-  // async listAndCount(
-  //   selector: ProductSelector,
-  //   config?: FindProductConfig
-  // ): Promise<[Product[], number]> {
-  //   this.prepareListConfig_(selector, config);
+        return products;
+      } catch (error) {
+        throw new MedusaError(
+          MedusaError.Types.UNEXPECTED_STATE,
+          `error in fetching products ${JSON.stringify(error)}`
+        );
+      }
+    } else {
+      throw new MedusaError(
+        MedusaError.Types.NOT_ALLOWED,
+        "can not create Product because of missing user store"
+      );
+    }
+  }
 
-  //   const products = await super.listAndCount(selector, config);
-  //   return products;
-  // }
+  async listAndCount(
+    selector: ProductSelector,
+    config?: FindProductConfig
+  ): Promise<[Product[], number]> {
+    if (this.loggedInUser_?.store_id) {
+      try {
+        const currentStoreId = this.loggedInUser_?.store_id;
+        const productRepo = this.activeManager_.withRepository(
+          this.productRepository_
+        );
 
-  //   async create(productObject: CreateProductInput): Promise<Product> {
-  //     if (!productObject.store_id && this.loggedInUser_?.store_id) {
-  //       productObject.store_id = this.loggedInUser_.store_id;
-  //
-  //       // This will generate a handle for the product based on the title and store_id
-  //       // e.g. "sunglasses-01HXVYMJF9DW..."
-  //       const title = productObject.title
-  //         .normalize("NFD")
-  //         .replace(/[\u0300-\u036f]/g, "")
-  //         .replace(/\s+/g, "-")
-  //         .toLowerCase();
-  //       const store_id = this.loggedInUser_.store_id.replace("store_", "");
-  //
-  //       productObject.handle = `${title}-${store_id}`;
-  //     }
-  //
-  //     const product = await super.create(productObject);
-  //     return product;
-  //   }
+        const qb = productRepo
+          .createQueryBuilder("product")
+          .innerJoin("product.stores", "store", "store.id = :storeId")
+          .setParameter("storeId", currentStoreId)
+          .leftJoinAndSelect("product.variants", "variant"); // NOTE: I needed to add variants bc it was throwing an error on GET
+
+        const productsWithCount = await qb.getManyAndCount();
+
+        return productsWithCount;
+      } catch (error) {
+        throw new MedusaError(
+          MedusaError.Types.UNEXPECTED_STATE,
+          `error in fetching products with count ${JSON.stringify(error)}`
+        );
+      }
+    } else {
+      throw new MedusaError(
+        MedusaError.Types.NOT_ALLOWED,
+        "can not create Product because of missing user store"
+      );
+    }
+  }
 }
 
 export default ProductService;

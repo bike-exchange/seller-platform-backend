@@ -6,17 +6,19 @@ export class CreateProductStoreTable1720528382721
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: "product_store",
+        name: "product_stores_store",
         columns: [
           {
-            name: "product_id",
-            type: "char",
+            name: "productId",
+            type: "varchar",
+            length: "255",
             unsigned: true,
             isNullable: false,
           },
           {
-            name: "store_id",
-            type: "char",
+            name: "storeId",
+            type: "varchar",
+            length: "255",
             unsigned: true,
             isNullable: false,
           },
@@ -24,13 +26,13 @@ export class CreateProductStoreTable1720528382721
         foreignKeys: [
           {
             name: "FK_64a92c1ada6c4c12a45b0df01537f1c7",
-            columnNames: ["product_id"],
+            columnNames: ["productId"],
             referencedTableName: "product",
             referencedColumnNames: ["id"],
           },
           {
             name: "FK_42e226f0e7b244eea40e19e68b8b2631",
-            columnNames: ["store_id"],
+            columnNames: ["storeId"],
             referencedTableName: "store",
             referencedColumnNames: ["id"],
           },
@@ -41,11 +43,11 @@ export class CreateProductStoreTable1720528382721
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      'ALTER TABLE "product_store" DROP CONSTRAINT "FK_64a92c1ada6c4c12a45b0df01537f1c7"'
+      'ALTER TABLE "product_stores_store" DROP CONSTRAINT "FK_64a92c1ada6c4c12a45b0df01537f1c7"'
     );
     await queryRunner.query(
-      'ALTER TABLE "product_store" DROP CONSTRAINT "FK_42e226f0e7b244eea40e19e68b8b2631"'
+      'ALTER TABLE "product_stores_store" DROP CONSTRAINT "FK_42e226f0e7b244eea40e19e68b8b2631"'
     );
-    await queryRunner.dropTable("product_store");
+    await queryRunner.dropTable("product_stores_store");
   }
 }
