@@ -3,6 +3,7 @@ import {
   StoreService as MedusaStoreService,
   buildQuery,
 } from "@medusajs/medusa";
+import { MedusaError } from "@medusajs/utils";
 import { Lifetime } from "awilix";
 
 import type { User } from "../models/user";
@@ -21,6 +22,28 @@ class StoreService extends MedusaStoreService {
     } catch (e) {
       // avoid errors when backend first runs
     }
+  }
+
+  /**
+   * Retrieves store by id. This can be handy when updating the stores field of a given product and add a specific store to it
+   * @param id
+   * @param config
+   * @returns
+   */
+  async getById(id: string, config?: FindConfig<Store>) {
+    const storeRepo = this.manager_.withRepository(this.storeRepository_);
+
+    const query = buildQuery({ id }, config);
+
+    const stores = await storeRepo.find(query);
+
+    const store = stores[0];
+
+    if (!store) {
+      throw new MedusaError(MedusaError.Types.NOT_FOUND, "Store not found");
+    }
+
+    return store;
   }
 
   async retrieve(config?: FindConfig<Store>): Promise<Store> {
