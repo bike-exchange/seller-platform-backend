@@ -5,8 +5,8 @@ declare module "@medusajs/medusa/dist/models/store" {
   interface Store {
     seller_external_id: string | null;
     address: string | null;
-    verticals: string[];
-    delivery_options: string[];
+    verticals: string[] | null;
+    delivery_options: string[] | null;
   }
 }
 declare module "@medusajs/medusa/dist/models/product" {

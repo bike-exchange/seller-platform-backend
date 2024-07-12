@@ -16,12 +16,12 @@ export class Store extends MedusaStore {
   address: string | null;
 
   // verticals that the store covers:
-  @Column("text", { nullable: false, default: ["de"], array: true })
-  verticals: string[];
+  @Column("text", { nullable: true /*, default: "de"*/, array: true })
+  verticals: string[] | null;
 
   // different delivery options offered by the seller
-  @Column("text", { nullable: false, default: ["DTD"], array: true })
-  delivery_options: string[];
+  @Column("text", { nullable: true /*, default: ["DTD"]*/, array: true })
+  delivery_options: string[] | null;
 
   // relation between the store and the users (dev/member):
   @OneToMany(() => User, (user) => user.store)
