@@ -9,8 +9,8 @@ export class AddDeliveryOptionsToStore1720705977762
       new TableColumn({
         name: "delivery_options",
         type: "varchar[]", // Array of strings
-        isNullable: false,
-        default: "'DTD'", // Default value as a string representation of the array
+        // isNullable: false,
+        // default: '"DTD"', // Default value as a string representation of the array TODO: default value not working
       })
     );
   }

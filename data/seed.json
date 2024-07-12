@@ -1,6 +1,8 @@
 {
   "store": {
-    "currencies": ["eur", "usd"]
+    "currencies": ["eur", "usd"],
+    "verticals": ["de"],
+    "delivery_options": ["DTD"]
   },
   "users": [
     {

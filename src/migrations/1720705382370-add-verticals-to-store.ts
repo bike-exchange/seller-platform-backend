@@ -7,8 +7,8 @@ export class AddVerticalsToStore1720705382370 implements MigrationInterface {
       new TableColumn({
         name: "verticals",
         type: "varchar[]", // Array of strings
-        isNullable: false,
-        default: "'de'", // Default vertical
+        // isNullable: false,
+        // default: '"de"', // Default vertical TODO: default value not working
       })
     );
   }
