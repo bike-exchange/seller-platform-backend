@@ -3,8 +3,10 @@ import type {
   CreateProductInput as MedusaCreateProductInput,
 } from "@medusajs/medusa/dist/types/product";
 import {
+  FindConfig,
   ProductService as MedusaProductService,
   Product,
+  buildQuery,
 } from "@medusajs/medusa";
 import { MedusaError } from "@medusajs/utils";
 import { Lifetime } from "awilix";
@@ -59,6 +61,105 @@ class ProductService extends MedusaProductService {
         "can not create Product because of missing user store"
       );
     }
+  }
+
+  async updateProductWithStore({
+    product,
+    storeId,
+  }: {
+    product: Product;
+    storeId: string;
+  }): Promise<Product> {
+    const productRepo = this.activeManager_.withRepository(
+      this.productRepository_
+    );
+
+    const newProductStore = await this.storeService_.getById(storeId);
+    (product.stores || []).push(newProductStore);
+    const updatedProduct = await productRepo.save(product);
+    return updatedProduct;
+  }
+
+  async createProductWithStore({
+    product,
+    storeId,
+  }: {
+    product: Product;
+    storeId: string;
+  }): Promise<Product> {
+    const productRepo = this.activeManager_.withRepository(
+      this.productRepository_
+    );
+
+    const associatedProductStore = await this.storeService_.getById(storeId);
+
+    product.stores = [associatedProductStore];
+
+    const createdResource = await productRepo.save(product);
+    return createdResource;
+  }
+
+  /**
+   * given a Product object and a store-id, this function would:
+   *  - store the Product into our DB if it doesn't exisit
+   *  - update existing Product by adding store relation
+   * @returns created or updated Product
+   */
+
+  async createOrUpdateForStore({
+    storeId,
+    product,
+    selector,
+    config,
+  }: {
+    storeId: string;
+    product: Product;
+    selector: ProductSelector;
+    config?: FindConfig<Product>;
+  }): Promise<Product> {
+    const productMpn = product.mpn;
+    const existingProduct = await this.getByMpn(productMpn, selector, config);
+
+    // if we have an existing product with given MPN
+    // => we add store to product-store relation
+    if (existingProduct) {
+      const updatedProduct = await this.updateProductWithStore({
+        product,
+        storeId,
+      });
+      return updatedProduct;
+    }
+
+    // else we create the product and set the store relation
+    else {
+      const createdProduct = await this.createProductWithStore({
+        product,
+        storeId,
+      });
+
+      return createdProduct;
+    }
+  }
+
+  /**
+   * To enable migration of products from CT to Medusa we need:
+   * insert new Product entries
+   * check if a given product exists (mpn) => if product exists, we simply extend the stores relation and add new store
+   *
+   */
+
+  async getByMpn(
+    mpn: string,
+    selector?: ProductSelector,
+    config?: FindConfig<Product>
+  ): Promise<Product | null> {
+    const productRepo = this.activeManager_.withRepository(
+      this.productRepository_
+    );
+    const query = buildQuery({ mpn: mpn }, config);
+    const products = await productRepo.find(query);
+
+    return products.length ? products[0] : null;
   }
 
   async list(
