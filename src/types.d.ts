@@ -12,6 +12,7 @@ declare module "@medusajs/medusa/dist/models/store" {
 declare module "@medusajs/medusa/dist/models/product" {
   interface Product {
     stores?: Store[];
+    mpn: string | null;
   }
 }
 
