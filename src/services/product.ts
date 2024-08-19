@@ -89,7 +89,6 @@ class ProductService extends MedusaProductService {
     product: Product;
     storeId: string;
   }): Promise<Product> {
-
     const productRepo = this.activeManager_.withRepository(
       this.productRepository_
     );
@@ -121,7 +120,6 @@ class ProductService extends MedusaProductService {
     selector: ProductSelector;
     config?: FindConfig<Product>;
   }): Promise<Product> {
-
     const storeId = this.loggedInUser_?.store_id;
     // TODO: implement logic related to MPN
     const productMpn = product.mpn;
@@ -172,7 +170,7 @@ class ProductService extends MedusaProductService {
     return products.length ? products[0] : null;
   }
 
-  async getById(id: string, config: FindConfig<Product>): Promise<Product> {
+  async getById(id: string, config?: FindConfig<Product>): Promise<Product> {
     const productRepo = this.activeManager_.withRepository(
       this.productRepository_
     );
@@ -184,7 +182,13 @@ class ProductService extends MedusaProductService {
       throw new MedusaError(MedusaError.Types.NOT_FOUND, "Product not found");
     }
 
-    return searchResult[0];
+    // TODO: why this hack?
+    const foundProduct = searchResult[0];
+    foundProduct.tags = foundProduct.tags || [];
+    foundProduct.variants = foundProduct.variants || [];
+    foundProduct.options = foundProduct.options || [];
+
+    return foundProduct;
   }
 
   async list(
