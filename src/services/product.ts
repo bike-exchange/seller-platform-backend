@@ -162,6 +162,21 @@ class ProductService extends MedusaProductService {
     return products.length ? products[0] : null;
   }
 
+  async getById(id: string, config: FindConfig<Product>): Promise<Product> {
+    const productRepo = this.activeManager_.withRepository(
+      this.productRepository_
+    );
+
+    const query = buildQuery({ id }, config);
+    const searchResult = await productRepo.find(query);
+
+    if (!searchResult.length) {
+      throw new MedusaError(MedusaError.Types.NOT_FOUND, "Product not found");
+    }
+
+    return searchResult[0];
+  }
+
   async list(
     selector: ProductSelector,
     config?: FindProductConfig

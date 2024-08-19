@@ -28,6 +28,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
  * creates store with payload
  */
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
+  // TODO: add validation
   const newStorePayload = req.body as Store;
 
   const manager: EntityManager = req.scope.resolve("manager");
