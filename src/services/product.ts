@@ -15,6 +15,8 @@ import { ProductSelector as MedusaProductSelector } from "@medusajs/medusa/dist/
 import type { User } from "../models/user";
 import StoreService from "./store";
 import { Store } from "../models/store";
+import { generateEntityId } from "@medusajs/medusa/dist/utils";
+import { checkIsAdminUser } from "../utils/checkIsAdminUser";
 
 // We override the type definition so it will not throw TS errors in the `create` method
 type CreateProductInput = {
@@ -87,6 +89,7 @@ class ProductService extends MedusaProductService {
     product: Product;
     storeId: string;
   }): Promise<Product> {
+
     const productRepo = this.activeManager_.withRepository(
       this.productRepository_
     );
@@ -94,6 +97,9 @@ class ProductService extends MedusaProductService {
     const associatedProductStore = await this.storeService_.getById(storeId);
 
     product.stores = [associatedProductStore];
+
+    // generate ID following Medusa:
+    product.id = generateEntityId(undefined, "product");
 
     const createdResource = await productRepo.save(product);
     return createdResource;
@@ -107,18 +113,22 @@ class ProductService extends MedusaProductService {
    */
 
   async createOrUpdateForStore({
-    storeId,
     product,
     selector,
     config,
   }: {
-    storeId: string;
     product: Product;
     selector: ProductSelector;
     config?: FindConfig<Product>;
   }): Promise<Product> {
+
+    const storeId = this.loggedInUser_?.store_id;
+    // TODO: implement logic related to MPN
     const productMpn = product.mpn;
-    const existingProduct = await this.getByMpn(productMpn, selector, config);
+    // const existingProduct = await this.getByMpn(productMpn, selector, config);
+
+    // const existingProduct = await this.getByMpn(productMpn);
+    const existingProduct = null;
 
     // if we have an existing product with given MPN
     // => we add store to product-store relation
@@ -149,14 +159,14 @@ class ProductService extends MedusaProductService {
    */
 
   async getByMpn(
-    mpn: string,
-    selector?: ProductSelector,
-    config?: FindConfig<Product>
+    mpn: string
+    // selector?: ProductSelector,
+    // config?: FindConfig<Product>
   ): Promise<Product | null> {
     const productRepo = this.activeManager_.withRepository(
       this.productRepository_
     );
-    const query = buildQuery({ mpn: mpn }, config);
+    const query = buildQuery({ mpn: mpn });
     const products = await productRepo.find(query);
 
     return products.length ? products[0] : null;
@@ -178,7 +188,7 @@ class ProductService extends MedusaProductService {
   }
 
   async list(
-    selector: ProductSelector,
+    selector?: ProductSelector,
     config?: FindProductConfig
   ): Promise<Product[]> {
     if (this.loggedInUser_?.store_id) {
@@ -217,15 +227,28 @@ class ProductService extends MedusaProductService {
   }
 
   async listAndCount(
-    selector: ProductSelector,
-    config?: FindProductConfig
+    selector?: ProductSelector,
+    config?: FindConfig<Product>
   ): Promise<[Product[], number]> {
+    const productRepo = this.activeManager_.withRepository(
+      this.productRepository_
+    );
+
+    const isAdmin = checkIsAdminUser(this.loggedInUser_);
+
+    // NOTE: admin can get/see all PRODUCTS
+    if (isAdmin) {
+      const qb = productRepo
+        .createQueryBuilder("product")
+        .leftJoinAndSelect("product.variants", "variant");
+
+      const productsWithCount = await qb.getManyAndCount();
+
+      return productsWithCount;
+    }
     if (this.loggedInUser_?.store_id) {
       try {
         const currentStoreId = this.loggedInUser_?.store_id;
-        const productRepo = this.activeManager_.withRepository(
-          this.productRepository_
-        );
 
         const qb = productRepo
           .createQueryBuilder("product")
