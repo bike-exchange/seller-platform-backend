@@ -1,4 +1,4 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from "typeorm";
+import { Column, Entity, Index, JoinTable, ManyToMany } from "typeorm";
 
 import { Product as MedusaProduct } from "@medusajs/medusa";
 
@@ -6,11 +6,14 @@ import { Store } from "./store";
 
 @Entity()
 export class Product extends MedusaProduct {
-  @Index("ProductStoreId")
-  @Column({ nullable: true })
-  store_id?: string;
+  @ManyToMany(() => Store, { cascade: true })
+  @JoinTable()
+  stores: Store[];
 
-  @ManyToOne(() => Store, (store) => store.products)
-  @JoinColumn({ name: "store_id", referencedColumnName: "id" })
-  store?: Store;
+  // add mpn column referencing CT/MP resources
+  @Index("mpn")
+  @Column({ nullable: true })
+  mpn: string | null;
+
+  // TODO: other relevant fields need to be added
 }
